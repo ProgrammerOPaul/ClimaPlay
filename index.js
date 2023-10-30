@@ -1,21 +1,24 @@
 import axios from "axios";
 import express from "express";
 import querystring from "querystring";
+import bodyParser from "body-parser";
+import https from "https";
+import fs from "fs";
 
 const port = 3000;
 const app = express();
 
-app.use(express.json());
+// app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 let client_id = "7dec0159d9114c37918603dd56ad0467";
 let client_secret = "f5bb94f2af1e4054a9a901af7690f514";
 let client_access_token = "";
-let redirect_uri = "http%3A%2F%2Flocalhost%3A3000%2Fcallback";
+let redirect_uri = "https%3A%2F%2Flocalhost%3A3000%2Fcallback";
 
-
-app.get("/", async(req, res) =>{
+app.get("/", async (req, res) => {
   res.render("index.ejs");
-})
+});
 
 app.get("/login", async (req, res) => {
   res.redirect(
@@ -23,37 +26,37 @@ app.get("/login", async (req, res) => {
   );
 });
 
-app.get("/callback", async(req, res) =>{
+app.get("/callback", async (req, res) => {
   const spotifyResponse = await axios.post(
     "https://accounts.spotify.com/api/token",
     querystring.stringify({
       grant_type: "authorization_code",
       code: req.query.code,
-      redirect_uri:"http://localhost:3000/callback"
+      redirect_uri: "https://localhost:3000/callback",
     }),
     {
       headers: {
-        Authorization: "Basic " + "N2RlYzAxNTlkOTExNGMzNzkxODYwM2RkNTZhZDA0Njc6ZjViYjk0ZjJhZjFlNDA1NGE5YTkwMWFmNzY5MGY1MTQ=",
+        Authorization:
+          "Basic " +
+          "N2RlYzAxNTlkOTExNGMzNzkxODYwM2RkNTZhZDA0Njc6ZjViYjk0ZjJhZjFlNDA1NGE5YTkwMWFmNzY5MGY1MTQ=",
         "Content-Type": "application/x-www-form-urlencoded",
       },
     }
-  )
+  );
   client_access_token = spotifyResponse.data.access_token;
-  console.log(client_access_token);
   res.render("callback.ejs");
+});
+
+app.post("/data", async (req,res) => {
+  console.log(req.body);
+  res.render("data.ejs")
 })
 
+const server = https.createServer({
+  key: fs.readFileSync("/home/paul/certificates/example.com+5-key.pem", "utf8"),
+  cert: fs.readFileSync("/home/paul/certificates/example.com+5.pem", "utf8"),
+}, app);
 
-
-app.listen(port, () => console.log(`Server is running on port ${port}`));
-
-function generateRandomString(length) {
-  let chars =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
-  let charLength = chars.length;
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * charLength));
-  }
-  return result;
-}
+server.listen(port, () => {
+  console.log(`Server listening on https://localhost:${port}`);
+});

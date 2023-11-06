@@ -1,11 +1,29 @@
 <h1>callback</h1>
 
-<form action="/data" method="post">
+<form id="locationForm" action="/data" method="post" onsubmit="geo()">
   <input type="hidden" name="latitude" id="latitude" />
   <input type="hidden" name="longitude" id="longitude" />
-  <button id="find-me" type="submit" onclick="getLocation()">Show my location</button><br />
+  <button id="find-me" type="button">Show my location</button><br />
 </form>
 
+<script>
+   document.addEventListener('DOMContentLoaded', function () {
+    const getLocationButton = document.getElementById('find-me');
+    const latitude = document.getElementById('latitude');
+    const longitude = document.getElementById('longitude');
 
-
-
+    getLocationButton.addEventListener('click', function () {
+        if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                latitude.value = position.coords.latitude;
+                longitude.value = position.coords.longitude;
+                document.getElementById('locationForm').submit();
+            }, function (error) {
+                locationResult.innerHTML = `Error getting location: ${error.message}`;
+            });
+        } else {
+            locationResult.innerHTML = 'Geolocation is not available in your browser.';
+        }
+    });
+});   
+</script>
